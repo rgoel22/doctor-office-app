@@ -1,0 +1,29 @@
+version: '3'
+services:
+  backend:
+    build: ./doctor-office-backend
+    ports:
+      - "3000:3000"
+    networks:
+      - dockapp
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./doctor-office-frontend
+    ports:
+      - "3001:3001"
+    networks:
+      - dockapp
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - dockapp
+
+networks:
+  dockapp:

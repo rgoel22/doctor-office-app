@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 function App() {
   const [appointments, setAppointments] = useState([]);
   const [form, setForm] = useState({ patientName: '', doctorName: '', date: '' });
+  const api_url = process.env.REACT_APP_API_URL || 'http://localhost:3000'
+  //using api_url for local deployments
 
   useEffect(() => {
-    console.log(`Here: ${process.env.REACT_APP_API_URL}`);
-    fetch(`${process.env.REACT_APP_API_URL}/api/appointments`)
+    console.log(`Here: ${api_url}`);
+    fetch('/api/appointments')
       .then(res => res.json())
       .then(data => setAppointments(data));
   }, []);
@@ -14,7 +16,7 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch(`${process.env.REACT_APP_API_URL}/api/appointments`, {
+    fetch('/api/appointments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),

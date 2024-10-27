@@ -6,7 +6,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect('mongodb://mongo:27017/appointments', { useNewUrlParser: true, useUnifiedTopology: true });
+const mongodb_url = process.env.MONGODB_URL || 'mongo:27017'
+
+mongoose.connect(`mongodb://${mongodb_url}/appointments`, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
 const AppointmentSchema = new mongoose.Schema({
@@ -19,13 +21,13 @@ const AppointmentSchema = new mongoose.Schema({
 const Appointment = mongoose.model('Appointment', AppointmentSchema);
 
 
-app.get('/api/appointments', async (req, res) => {
+app.get('/appointments', async (req, res) => {
   const appointments = await Appointment.find();
   res.json(appointments);
 });
 
 
-app.post('/api/appointments', async (req, res) => {
+app.post('/appointments', async (req, res) => {
   const appointment = new Appointment(req.body);
   await appointment.save();
   res.json(appointment);

@@ -7,7 +7,7 @@ metadata:
 
 managedNodeGroups:
   - name: eks-docktor-app-mng
-    instanceType: t3.medium
+    instanceType: t2.medium
     desiredCapacity: 2
 
 iam:
@@ -18,3 +18,8 @@ iam:
       namespace: kube-system
     wellKnownPolicies:
       awsLoadBalancerController: true
+
+cloudWatch:
+ clusterLogging:
+   enableTypes: ["*"]
+   logRetentionInDays: 7

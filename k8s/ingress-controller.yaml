@@ -1,0 +1,26 @@
+# https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.7/guide/ingress/annotations/
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: docktor-app-ingress
+  annotations:
+    #alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:<ID>:certificate/b3aa48d8-d6a0-431e-9e21-b979876e5503
+    #alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    #alb.ingress.kubernetes.io/ssl-redirect: "443"
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  ingressClassName: alb
+  rules:
+    - #host: docktor-app.enpm818r.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

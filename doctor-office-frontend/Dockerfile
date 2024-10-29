@@ -12,8 +12,7 @@ RUN npm run build
 
 EXPOSE 3001
 
-#Stage 2 - Nginx Reverse Proxy
-#CMD ["npx", "serve", "build", "-l", "3001"]
+#Multi-Stage Build - Nginx Reverse Proxy
 FROM nginx
 
 COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf

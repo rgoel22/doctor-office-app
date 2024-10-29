@@ -12,7 +12,9 @@ function Register() {
   const onFinish = async (values) => {
     try {
       dispatch(showLoading());
-      const response = await axios.post("/api/user/register", values);
+      // const response = await axios.post("/api/user/register", values);
+      // const response = await axios.post("http://backend:3000/api/user/register", values);
+      const response = await axios.post("http://localhost:3000/api/user/register", values);
       dispatch(hideLoading());
       if (response.data.success) { 
         toast.success(response.data.message);

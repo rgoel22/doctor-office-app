@@ -1,0 +1,136 @@
+name: Build Images and Deploy to AWS EKS Cluster
+
+on:
+  push:
+    branches:
+      - 'deploy/**'
+      - main
+
+env:
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  CLUSTER_NAME: ${{ vars.CLUSTER_NAME }}
+  IMAGE_TAG: latest #${{ github.sha }}
+  CI_RUNNER_ROLE: ${{ secrets.CI_RUNNER_ROLE }}
+
+jobs:
+  check-prerequisites:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Check/Install Prerequisites"
+        run: |
+          echo "Checking all the runtime prerequisites" 
+          aws --version
+          kubectl version --client
+          helm version
+        continue-on-error: false
+
+  build:
+    runs-on: ubuntu-latest
+    needs: check-prerequisites
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4.2.2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Login to ECR
+      run: |
+        aws sts get-caller-identity
+        aws ecr get-login-password --region $AWS_REGION | \
+        docker login --username AWS --password-stdin $ECR_REGISTRY
+
+    - name: Build and Push Frontend Microservice Image to ECR
+      run: |
+        docker build -t frontend:$IMAGE_TAG ./doctor-office-frontend
+        docker tag frontend:$IMAGE_TAG $ECR_REGISTRY/docktor-app/doctor-office-frontend:$IMAGE_TAG
+        docker push $ECR_REGISTRY/docktor-app/doctor-office-frontend:$IMAGE_TAG
+
+    - name: Build and Push Backend Microservice Image to ECR
+      run: |
+        docker build -t backend:$IMAGE_TAG ./doctor-office-backend
+        docker tag backend:$IMAGE_TAG $ECR_REGISTRY/docktor-app/doctor-office-backend:$IMAGE_TAG
+        docker push $ECR_REGISTRY/docktor-app/doctor-office-backend:$IMAGE_TAG
+
+  deploy-eks-cluster:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install eksctl
+        run: |  
+          ARCH=amd64
+          PLATFORM=$(uname -s)_$ARCH
+          curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+          tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Version check - eksctl
+        run: |
+          eksctl version 
+        continue-on-error: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy EKS Cluster
+        run: |    
+          if ! eksctl get cluster -n $CLUSTER_NAME --region $AWS_REGION; then 
+            echo "Creating an EKS Cluster in AWS"
+            eksctl version
+            #eksctl create cluster -f ./aws_infra/eks_cluster_setup.yaml
+            #Add-ons installation
+            
+          else
+            echo "EKS Cluster $CLUSTER_NAME already running in $AWS_REGION...."
+            eksctl get cluster -n $CLUSTER_NAME --region $AWS_REGION
+            eksctl create iamidentitymapping --cluster $CLUSTER_NAME --arn $CI_RUNNER_ROLE --group system:masters --username admin
+          fi
+        continue-on-error: false
+
+  prod-k8s-deploy:
+    runs-on: ubuntu-latest
+    needs: deploy-eks-cluster
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy k8s deployment yaml files
+        run: |    
+          aws sts get-caller-identity
+          aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
+          echo "Applying Kubernetes configuration..."
+          kubectl apply -f ./k8s/
+        continue-on-error: false
+
+      - name: Check Deployment Status
+        run: |
+          echo "Verifying deployment status...."
+          kubectl get all
+          kubectl get ingress -o json
+
+      - name: Application Load Balancer URL
+        run: | 
+          echo "Frontend website available at:"
+          APP_URL=$(kubectl get ingress -o json | jq -r .items[].status.loadBalancer.ingress[0].hostname)
+          echo "http://$APP_URL"
+  
+  

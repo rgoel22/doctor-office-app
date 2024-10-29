@@ -13,7 +13,7 @@ function DoctorsList() {
   const getDoctorsData = async () => {
     try {
       dispatch(showLoading());
-      const resposne = await axios.get("/api/admin/get-all-doctors", {
+      const resposne = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/get-all-doctors`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -31,7 +31,7 @@ function DoctorsList() {
     try {
       dispatch(showLoading());
       const resposne = await axios.post(
-        "/api/admin/change-doctor-account-status",
+        `${process.env.REACT_APP_API_URL}/api/admin/change-doctor-account-status`,
         { doctorId: record._id, userId: record.userId, status: status },
         {
           headers: {

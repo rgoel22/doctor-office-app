@@ -85,18 +85,52 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy EKS Cluster
+        id: eks_cluster_setup
         run: |    
           if ! eksctl get cluster -n $CLUSTER_NAME --region $AWS_REGION; then 
-            echo "Creating an EKS Cluster in AWS"
+            echo "Verify eksctl installation.."
             eksctl version
-            #eksctl create cluster -f ./aws_infra/eks_cluster_setup.yaml
-            #Add-ons installation
+            echo "Creating EKS Cluster...."
+            eksctl create cluster -f ./aws_infra/eks_cluster_setup.yaml
+            echo "::set-output name=cluster_exists::false"
             
           else
             echo "EKS Cluster $CLUSTER_NAME already running in $AWS_REGION...."
             eksctl get cluster -n $CLUSTER_NAME --region $AWS_REGION
             eksctl create iamidentitymapping --cluster $CLUSTER_NAME --arn $CI_RUNNER_ROLE --group system:masters --username admin
+            echo "::set-output name=cluster_exists::true"
           fi
+        continue-on-error: false
+
+      - name: Install EKS Cluster Add-ons
+        if: steps.eks_cluster_setup.outputs.cluster_exists == 'false'
+        run: |
+          echo "Installing EKS Cluster Add-ons"
+          echo "Installing Application Load Balancer (ALB) Add-on....."
+          export CLUSTER_VPC=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
+          helm repo add eks https://aws.github.io/eks-charts
+          helm repo update eks
+          helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+            --namespace kube-system \
+            --set clusterName=$CLUSTER_NAME \
+            --set serviceAccount.create=false \
+            --set region=${AWS_REGION} \
+            --set vpcId=${CLUSTER_VPC} \
+            --set serviceAccount.name=aws-load-balancer-controller
+
+          echo "Installing EKS Cloud Observability/Container Insights Add-on....."
+          eksctl create iamserviceaccount \
+            --name cloudwatch-agent \
+            --namespace amazon-cloudwatch --cluster $CLUSTER_NAME \
+            --role-name aws-cloudwatch-agent \
+            --attach-policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy \
+            --role-only \
+            --approve
+
+          aws eks create-addon \
+            --addon-name amazon-cloudwatch-observability \
+            --cluster-name docktor-app-cluster \
+            --service-account-role-arn arn:aws:iam::619715105204:role/aws-cloudwatch-agent
         continue-on-error: false
 
   prod-k8s-deploy:
@@ -129,7 +163,7 @@ jobs:
 
       - name: Application Load Balancer URL
         run: | 
-          echo "Frontend website available at:"
+          echo "Frontend website will be available at the following URL:"
           APP_URL=$(kubectl get ingress -o json | jq -r .items[].status.loadBalancer.ingress[0].hostname)
           echo "http://$APP_URL"
   

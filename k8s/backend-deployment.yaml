@@ -14,12 +14,12 @@ spec:
     spec:
       containers:
       - name: backend
-        image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-backend
+        image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-backend:latest
         ports:
         - containerPort: 3000
         env:
         - name: MONGODB_URL
-          value: "mongo-service.default.svc.cluster.local:27017"
+          value: "mongo-0.mongo.default.svc.cluster.local,mongo-1.mongo.default.svc.cluster.local,mongo-2.mongo.default.svc.cluster.local:27017" #"mongo-service.default.svc.cluster.local:27017"
 #      imagePullSecrets:
 #      - name: myregistry-secret
 

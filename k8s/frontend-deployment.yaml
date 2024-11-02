@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-frontend
+        image: 314147830127.dkr.ecr.us-east-1.amazonaws.com/docktor-app/docker-frontend
         ports:
         - containerPort: 3001
 #      imagePullSecrets:
@@ -31,4 +31,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3001
-#  type: LoadBalancer
+  type: LoadBalancer

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-backend
+        image: 314147830127.dkr.ecr.us-east-1.amazonaws.com/docktor-app/docker-backend
         ports:
         - containerPort: 3000
         env:

@@ -24,7 +24,7 @@ addons:
     wellKnownPolicies:
       ebsCSIController: true
 
-cloudWatch:
- clusterLogging:
-   enableTypes: ["*"]
-   logRetentionInDays: 7
+#cloudWatch:
+# clusterLogging:
+#   enableTypes: ["*"]
+#   logRetentionInDays: 7

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-frontend
+        image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-frontend:v1
         ports:
         - containerPort: 3001
 #      imagePullSecrets:

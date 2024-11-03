@@ -19,6 +19,11 @@ iam:
     wellKnownPolicies:
       awsLoadBalancerController: true
 
+addons:
+  - name: aws-ebs-csi-driver
+    wellKnownPolicies:
+      ebsCSIController: true
+
 cloudWatch:
  clusterLogging:
    enableTypes: ["*"]

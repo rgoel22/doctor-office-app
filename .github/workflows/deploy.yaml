@@ -10,7 +10,7 @@ env:
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   AWS_REGION: ${{ vars.AWS_REGION }}
   CLUSTER_NAME: ${{ vars.CLUSTER_NAME }}
-  IMAGE_TAG: latest #${{ github.sha }}
+  IMAGE_TAG: ${{ github.sha }} #latest
   CI_RUNNER_ROLE: ${{ secrets.CI_RUNNER_ROLE }}
 
 jobs:
@@ -152,13 +152,16 @@ jobs:
           aws sts get-caller-identity
           aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
           echo "Applying Kubernetes configuration..."
-          kubectl apply -f ./k8s/
+          kubectl apply -f ./k8s/backend-deployment.yaml
+          kubectl apply -f ./k8s/frontend-deployment.yaml
+          kubectl apply -f ./k8s/ingress-controller.yaml
         continue-on-error: false
 
       - name: Check Deployment Status
         run: |
           echo "Verifying deployment status...."
           kubectl get all
+          sleep 10
           kubectl get ingress -o json
 
       - name: Application Load Balancer URL

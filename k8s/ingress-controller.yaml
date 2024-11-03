@@ -4,9 +4,9 @@ kind: Ingress
 metadata:
   name: docktor-app-ingress
   annotations:
-    #alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:<ID>:certificate/b3aa48d8-d6a0-431e-9e21-b979876e5503
-    #alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    #alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:619715105204:certificate/1cc6df08-c38c-42ed-a89b-f074c4e7e950
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
     kubernetes.io/ingress.class: "alb"
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
@@ -14,7 +14,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - #host: docktor-app.enpm818r.com
+    - #host: doctorapp-group3enpm818r.site
       http:
         paths:
           - path: /

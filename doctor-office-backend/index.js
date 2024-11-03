@@ -9,7 +9,7 @@ app.use(cors());
 const mongodb_url = process.env.MONGODB_URL || 'mongo:27017'
 
 mongoose.connect(`mongodb://${mongodb_url}/appointments?replicaSet=rs0`, { useNewUrlParser: true, useUnifiedTopology: true });
-
+ 
 
 const AppointmentSchema = new mongoose.Schema({
   patientName: String,

@@ -27,7 +27,7 @@ function App() {
 
   return (
     <div>
-      <h1>Doctor's Office Appointments!</h1>
+      <h1>Doctor's Office Appointments</h1>
       <form onSubmit={handleSubmit}>
         <input placeholder="Patient Name" value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })} />
         <input placeholder="Doctor Name" value={form.doctorName} onChange={(e) => setForm({ ...form, doctorName: e.target.value })} />

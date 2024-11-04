@@ -147,6 +147,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Deploy MongoDB StatefulSets
+        run: | 
+          echo "Setting up MongoDB Primary and Secondary replicaSets..."
+          aws sts get-caller-identity
+          aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
+          kubectl apply -f ./k8s/statefulset-mongo/storage-class.yaml
+          sleep 5
+          kubectl apply -f ./k8s/statefulset-mongo/mongo-statefulset.yaml
+          sleep 60
+          kubectl apply -f ./k8s/statefulset-mongo/mongo-service.yaml
+          sleep 10
+          
+          echo "Check for ReplicaSets status..."
+          RS_STATUS=$(kubectl exec -it mongodb-0 -- mongo --quiet --eval 'rs.status().ok')
+          if [ "$RS_STATUS" != "1" ]; then
+            kubectl exec -it mongo-0 -- mongo --eval 'rs.initiate({_id: "rs0",members: [{_id: 0, host: "mongo-0.mongo.default.svc.cluster.local:27017" },{_id: 1, host: "mongo-1.mongo.default.svc.cluster.local:27017" },{_id: 2, host: "mongo-2.mongo.default.svc.cluster.local:27017" },]});'
+          else
+            echo "ReplicaSet already configured!"
+          fi
+          kubectl get all
+
       - name: Deploy k8s deployment yaml files
         run: |    
           aws sts get-caller-identity
@@ -157,6 +178,7 @@ jobs:
           kubectl apply -f ./k8s/ingress-controller.yaml
           kubectl apply -f ./k8s/metrics-server-components.yaml
           kubectl apply -f ./k8s/backend-hpa.yaml
+          kubectl apply -f ./k8s/frontend-hpa.yaml
         continue-on-error: false
 
       - name: Check Deployment Status

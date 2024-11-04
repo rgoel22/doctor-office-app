@@ -15,6 +15,13 @@ spec:
       containers:
       - name: frontend
         image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-frontend:v1
+        resources:  # Set resource requests and limits for stable performance and HPA support.
+          requests:
+            cpu: "100m"   # min CPU requests
+            memory: "256Mi"  # min memory requests
+          limits:
+            cpu: "200m"   # max CPU requests
+            memory: "512Mi"  # max memory requests
         ports:
         - containerPort: 3001
 #      imagePullSecrets:

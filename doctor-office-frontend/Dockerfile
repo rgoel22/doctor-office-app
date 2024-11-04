@@ -1,5 +1,4 @@
-# FROM node:14 as builder
-FROM --platform=linux/amd64 node:18 as builder
+FROM node:14 as builder
 
 WORKDIR /usr/src/app
 

@@ -15,7 +15,7 @@ spec:
       containers:
       - name: backend
         image: 619715105204.dkr.ecr.us-east-1.amazonaws.com/docktor-app/doctor-office-backend:stateful
-        resources:
+        resources:  # Set resource requests and limits for stable performance and HPA support.
           requests:
             cpu: "100m"   # min CPU requests
             memory: "256Mi"  # min memory requests
